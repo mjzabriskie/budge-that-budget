@@ -1,7 +1,36 @@
 //function to clear cache so that changes to database will be reflected on page refresh
 const clearCache = () => {
-  caches.delete('BudgetTracker-1');
-}
+  const APP_PREFIX = "BudgetTracker-";
+  const VERSION = "1";
+  const CACHE_NAME = APP_PREFIX + VERSION;
+  const FILES_TO_CACHE = [
+    "./index.html",
+    "./css/styles.css",
+    "./js/index.js",
+    "./icons/icon-72x72.png",
+    "./icons/icon-96x96.png",
+    "./icons/icon-128x128.png",
+    "./icons/icon-144x144.png",
+    "./icons/icon-152x152.png",
+    "./icons/icon-192x192.png",
+    "./icons/icon-384x384.png",
+    "./icons/icon-512x512.png",
+    "/",
+    "./manifest.json",
+    "./api/transaction",
+    "./js/idb.js",
+  ];
+  if(navigator.onLine) {
+  caches.delete(CACHE_NAME);
+  caches
+    .open(CACHE_NAME)
+    .then(function (cache) {
+      return cache.addAll(FILES_TO_CACHE);
+    })
+    .catch(() => console.log("Error: Could not create new cache"));
+  }
+  return;
+};
 
 let db;
 
@@ -29,7 +58,7 @@ request.onerror = function (event) {
 
 // addes new records to indexedDB if they were unable to be posted
 function saveRecord(record) {
-    //opens new transaction with indexedDB to read/write
+  //opens new transaction with indexedDB to read/write
   const transaction = db.transaction(["new_transaction"], "readwrite");
 
   // accesses the object store for "new_transaction"
@@ -41,53 +70,54 @@ function saveRecord(record) {
 
 //uploads new entries stored in indexedDB
 function uploadTransaction() {
-    // open a transaction on your db
-    const transaction = db.transaction(['new_transaction'], 'readwrite');
+  // open a transaction on your db
+  const transaction = db.transaction(["new_transaction"], "readwrite");
 
-    // access your object store
-    const transactionObjectStore = transaction.objectStore('new_transaction');
+  // access your object store
+  const transactionObjectStore = transaction.objectStore("new_transaction");
 
-    // get all records from store and set to a variable
-    const getAll = transactionObjectStore.getAll();
+  // get all records from store and set to a variable
+  const getAll = transactionObjectStore.getAll();
 
-    getAll.onsuccess = function() {
-        // if the index store isn't empty, it will get everything in there and
-        // send to post route
-        if (getAll.result.length > 0) {
-          fetch('/api/transaction', {
-            method: 'POST',
-            body: JSON.stringify(getAll.result),
-            headers: {
-              Accept: 'application/json, text/plain, */*',
-              'Content-Type': 'application/json'
-            }
-          })
-            .then(response => response.json())
-            .then(serverResponse => {
-              if (serverResponse.message) {
-                throw new Error(serverResponse);
-              }
-              // start another transaction with indexedDB
-              const transaction = db.transaction(['new_transaction'], 'readwrite');
-              // access the new_transaction object store
-              const transactionObjectStore = transaction.objectStore('new_transaction');
-              // clears everything from the store
-              transactionObjectStore.clear();
+  getAll.onsuccess = function () {
+    // if the index store isn't empty, it will get everything in there and
+    // send to post route
+    if (getAll.result.length > 0) {
+      fetch("/api/transaction", {
+        method: "POST",
+        body: JSON.stringify(getAll.result),
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((serverResponse) => {
+          if (serverResponse.message) {
+            throw new Error(serverResponse);
+          }
+          // start another transaction with indexedDB
+          const transaction = db.transaction(["new_transaction"], "readwrite");
+          // access the new_transaction object store
+          const transactionObjectStore =
+            transaction.objectStore("new_transaction");
+          // clears everything from the store
+          transactionObjectStore.clear();
 
-              alert('All saved transactions have been submitted.');
-              // deletes cache so that service worker will need to recache everything,
-              // reflecting the changes from the transactions that were just posted.
-              clearCache();
-              // reloads page to reflect changes and create new cache
-              location.reload();
-            })
-            .catch(err => {
-              console.log(err);
-            });
-        }
-      };
-  }
+          alert("All saved transactions have been submitted.");
+          // deletes cache so that service worker will need to recache everything,
+          // reflecting the changes from the transactions that were just posted.
+          clearCache();
+          // reloads page to reflect changes and create new cache
+          location.reload();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  };
+}
 
-  window.addEventListener('online', uploadTransaction);
-  //listens for page refresh so new cache can be created with changes
-  window.addEventListener('load', clearCache);
+window.addEventListener("online", uploadTransaction);
+//listens for page refresh so new cache can be created with changes
+window.addEventListener("load", clearCache);
