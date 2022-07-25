@@ -23,18 +23,26 @@ const FILES_TO_CACHE = [
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      console.log("installing cache : " + CACHE_NAME);
       return cache.addAll(FILES_TO_CACHE);
     })
   );
 });
-console.log("version 1.0.8");
-// Respond with cached resources
+
+// Determines whether or not to serve from cache or fetch new versions
 self.addEventListener("fetch", function (e) {
   console.log("fetch request : " + e.request.url);
   e.respondWith(
     caches.match(e.request).then(function (request) {
-      return request || fetch(e.request);
+      if (request) {
+        // responds with cached documents if available
+        return request;
+      } else {
+        // fetches new documents if not in cache
+        return fetch(e.request);
+      }
+
+      // You can omit if/else for console.log & put one line below like this too.
+      // return request || fetch(e.request)
     })
   );
 });
@@ -63,96 +71,3 @@ self.addEventListener("activate", function (e) {
     })
   );
 });
-
-// // Respond with cached resources
-// // self.addEventListener("fetch", function (event) {
-// //   console.log("fetch request : " + event.request.url);
-// //   event.respondWith(
-// //     caches.open(DATA_CACHE_NAME).then(response => {
-// //       if (response.status === 200) {
-// //         cache.put(event.request.url, response.clone());
-// //       }
-// //       return response;
-// //     })
-// //     .catch(err => {
-// //       return cache.match(event.request);
-// //     })
-// //   )
-// // });
-// self.addEventListener("fetch", function (evt) {
-//   // if (evt.request.url.includes('/api/')) {
-//   evt.respondWith(
-//     caches
-//       .open(DATA_CACHE_NAME)
-//       .then((cache) => {
-//         return fetch(evt.request)
-//           .then((response) => {
-//             // If the response was good, clone it and store it in the cache.
-//             if (response.status === 200) {
-//               cache.put(evt.request.url, response.clone());
-//             }
-
-//             return response;
-//           })
-//           .catch((err) => {
-//             // Network request failed, try to get it from the cache.
-//             console.log(cache);
-//             return cache.match(evt.request);
-//           });
-//       })
-//       .catch((err) => console.log(err))
-//   );
-
-//   return;
-//   //}
-// });
-
-// //       if cache is available, respond with cache
-// //       console.log("responding with cache : " + event.response.url);
-// //       return response;
-// //     } else {
-// //       // if there are no cache, try fetching request
-// //       console.log("file is not cached, fetching : " + event.request.url);
-// //       return fetch(event.request)
-// //       //return caches.match(e.request);
-// //     }
-
-// //     // You can omit if/else for console.log & put one line below like this too.
-// //     // return request || fetch(e.request)
-// //   })
-// // );
-
-// // Cache resources
-// self.addEventListener("install", function (e) {
-//   e.waitUntil(
-//     caches.open(CACHE_NAME).then(function (cache) {
-//       console.log("installing cache : " + CACHE_NAME);
-//       return cache.addAll(FILES_TO_CACHE);
-//       //return console.log(cache);
-//     })
-//   );
-// });
-
-// // Delete outdated caches
-// self.addEventListener("activate", function (e) {
-//   e.waitUntil(
-//     caches.keys().then(function (keyList) {
-//       // `keyList` contains all cache names under your username.github.io
-//       // filter out ones that has this app prefix to create keeplist
-//       let cacheKeeplist = keyList.filter(function (key) {
-//         return key.indexOf(APP_PREFIX);
-//       });
-//       // add current cache name to keeplist
-//       cacheKeeplist.push(CACHE_NAME);
-
-//       return Promise.all(
-//         keyList.map(function (key, i) {
-//           if (cacheKeeplist.indexOf(key) === -1) {
-//             console.log("deleting cache : " + keyList[i]);
-//             return caches.delete(keyList[i]);
-//           }
-//         })
-//       );
-//     })
-//   );
-// });
