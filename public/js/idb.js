@@ -1,5 +1,5 @@
 //function to clear cache so that changes to database will be reflected on page refresh
-const clearCache = () => {
+function clearCache() {
   const APP_PREFIX = "BudgetTracker-";
   const VERSION = "1";
   const CACHE_NAME = APP_PREFIX + VERSION;
