@@ -30,7 +30,6 @@ self.addEventListener("install", function (e) {
 
 // Determines whether or not to serve from cache or fetch new versions
 self.addEventListener("fetch", function (e) {
-  console.log("fetch request : " + e.request.url);
   e.respondWith(
     caches.match(e.request).then(function (request) {
       if (request) {
@@ -40,9 +39,6 @@ self.addEventListener("fetch", function (e) {
         // fetches new documents if not in cache
         return fetch(e.request);
       }
-
-      // You can omit if/else for console.log & put one line below like this too.
-      // return request || fetch(e.request)
     })
   );
 });
@@ -51,9 +47,7 @@ self.addEventListener("fetch", function (e) {
 self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keyList) {
-      console.log(`Key list is ${keyList}`);
-      // `keyList` contains all cache names under your username.github.io
-      // filter out ones that has this app prefix to create keeplist
+      // filters keys to create keep list with current cache
       let cacheKeeplist = keyList.filter(function (key) {
         return key.indexOf(APP_PREFIX);
       });
@@ -63,7 +57,6 @@ self.addEventListener("activate", function (e) {
       return Promise.all(
         keyList.map(function (key, i) {
           if (cacheKeeplist.indexOf(key) === -1) {
-            console.log("deleting cache : " + keyList[i]);
             return caches.delete(keyList[i]);
           }
         })

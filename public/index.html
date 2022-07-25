@@ -49,12 +49,12 @@
   <script src="js/idb.js"></script>
 </body>
 <script>
-  (function() {
-    if("serviceWorker" in navigator) {
+  (function () {
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js")
-        .then(() => console.log("Service Worker registered successfully."))
         .catch(error => console.log("Service Worker registration failed:", error));
     }
   })();
 </script>
+
 </html>
