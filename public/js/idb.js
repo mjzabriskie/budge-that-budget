@@ -1,3 +1,8 @@
+//function to clear cache so that changes to database will be reflected on page refresh
+const clearCache = () => {
+  caches.delete('BudgetTracker-1');
+}
+
 let db;
 
 //variable to interact with the budget_tracker collection in indexedDB
@@ -72,7 +77,7 @@ function uploadTransaction() {
               alert('All saved transactions have been submitted.');
               // deletes cache so that service worker will need to recache everything,
               // reflecting the changes from the transactions that were just posted.
-              caches.delete('BudgetTracker-1');
+              clearCache();
               // reloads page to reflect changes and create new cache
               location.reload();
             })
@@ -84,3 +89,5 @@ function uploadTransaction() {
   }
 
   window.addEventListener('online', uploadTransaction);
+  //listens for page refresh so new cache can be created with changes
+  window.addEventListener('load', clearCache);
